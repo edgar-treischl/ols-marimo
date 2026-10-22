@@ -80,14 +80,26 @@ def build_results_tab(mo, analysis_df, model, x_name, y_name):
     })
     
     intercept = model.params["const"]
-    slope = model.params[x_name]
+    
+    # Handle both numeric and categorical X
+    is_numeric_x = pd.api.types.is_numeric_dtype(analysis_df[x_name])
+    
+    if is_numeric_x:
+        # For numeric X, the predictor column is "_x_numeric"
+        slope = model.params["_x_numeric"]
+        equation = (
+            f"**{y_name} = {intercept:.4f} "
+            f"+ ({slope:.4f} × {x_name})**"
+        )
+    else:
+        equation = (
+            f"**{y_name} = {intercept:.4f} "
+            f"+ [dummy-coded {x_name}]**"
+        )
     
     return mo.vstack([
         mo.md("## Regression Results"),
-        mo.md(
-            f"**{y_name} = {intercept:.4f} "
-            f"+ ({slope:.4f} × {x_name})**"
-        ),
+        mo.md(equation),
         mo.hstack([
             mo.stat(
                 label="R²",
@@ -136,45 +148,54 @@ def build_assumptions_tab(mo, analysis_df, model, x_name, y_name):
     
     residuals = np.asarray(model.resid)
     fitted_values = np.asarray(model.fittedvalues)
+    is_numeric_x = pd.api.types.is_numeric_dtype(analysis_df[x_name])
     
-    # Scatter plot with fitted line
-    scatter_fig = go.Figure()
-    
-    scatter_fig.add_trace(go.Scatter(
-        x=analysis_df[x_name],
-        y=analysis_df[y_name],
-        mode="markers",
-        name="Observed",
-        marker=dict(size=7, opacity=0.65),
-    ))
-    
-    regression_x = np.linspace(
-        analysis_df[x_name].min(),
-        analysis_df[x_name].max(),
-        100,
-    )
-    
-    regression_y = (
-        model.params["const"]
-        + model.params[x_name] * regression_x
-    )
-    
-    scatter_fig.add_trace(go.Scatter(
-        x=regression_x,
-        y=regression_y,
-        mode="lines",
-        name="Fitted line",
-        line=dict(color="#E45756", width=3),
-    ))
-    
-    scatter_fig.update_layout(
-        title=f"{y_name} vs {x_name} with Fitted Line",
-        xaxis_title=x_name,
-        yaxis_title=y_name,
-        template="plotly_white",
-        height=400,
-        margin=dict(l=30, r=20, t=60, b=30),
-    )
+    # Scatter plot with fitted line (only for numeric X)
+    if is_numeric_x:
+        scatter_fig = go.Figure()
+        
+        scatter_fig.add_trace(go.Scatter(
+            x=analysis_df[x_name],
+            y=analysis_df[y_name],
+            mode="markers",
+            name="Observed",
+            marker=dict(size=7, opacity=0.65),
+        ))
+        
+        regression_x = np.linspace(
+            analysis_df[x_name].min(),
+            analysis_df[x_name].max(),
+            100,
+        )
+        
+        regression_y = (
+            model.params["const"]
+            + model.params["_x_numeric"] * regression_x
+        )
+        
+        scatter_fig.add_trace(go.Scatter(
+            x=regression_x,
+            y=regression_y,
+            mode="lines",
+            name="Fitted line",
+            line=dict(color="#E45756", width=3),
+        ))
+        
+        scatter_fig.update_layout(
+            title=f"{y_name} vs {x_name} with Fitted Line",
+            xaxis_title=x_name,
+            yaxis_title=y_name,
+            template="plotly_white",
+            height=400,
+            margin=dict(l=30, r=20, t=60, b=30),
+        )
+        
+        scatter_plot = mo.ui.plotly(scatter_fig)
+    else:
+        scatter_plot = mo.md(
+            f"*Scatter plot not shown for categorical predictor `{x_name}`. "
+            "See coefficients table for group means.*"
+        )
     
     # Residuals vs fitted values
     residual_fig = go.Figure()
@@ -251,8 +272,8 @@ def build_assumptions_tab(mo, analysis_df, model, x_name, y_name):
     )
     
     return mo.vstack([
-        mo.md("### Scatter Plot with Fitted Line"),
-        mo.ui.plotly(scatter_fig),
+        mo.md("### Scatter Plot"),
+        scatter_plot,
         mo.md("### Residuals vs Fitted Values"),
         mo.ui.plotly(residual_fig),
         mo.md("### Normal Q-Q Plot"),
