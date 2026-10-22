@@ -18,6 +18,9 @@ app = marimo.App(width="full")
 
 @app.cell
 def _():
+    from io import BytesIO
+    from urllib.request import urlopen
+
     import marimo as mo
     import numpy as np
     import pandas as pd
@@ -25,13 +28,18 @@ def _():
     import statsmodels.api as sm
     from scipy import stats
 
-    return go, mo, np, pd, sm, stats
+    return BytesIO, go, mo, np, pd, sm, stats, urlopen
 
 
 @app.cell
-def _(mo, pd):
+def _(BytesIO, mo, pd, urlopen):
     _data_path = mo.notebook_location() / "public" / "data" / "penguins.csv"
-    penguins = pd.read_csv(str(_data_path))
+    if str(_data_path).startswith(("http://", "https://")):
+        # Browser HTTP responses are already decompressed.
+        with urlopen(str(_data_path)) as _response:
+            penguins = pd.read_csv(BytesIO(_response.read()))
+    else:
+        penguins = pd.read_csv(str(_data_path))
 
     numeric_columns = penguins.select_dtypes(include="number").columns.tolist()
 
