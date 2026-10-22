@@ -1,0 +1,171 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python Playground · Pyodide</title>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.29.2/full/pyodide.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, sans-serif;
+    }
+
+    body {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 32px 20px;
+    }
+
+    header { margin-bottom: 24px; }
+
+    .muted { opacity: 0.7; }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+
+    button {
+      padding: 9px 16px;
+      border: 1px solid #8886;
+      border-radius: 8px;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    #run { background: #176b45; color: white; }
+
+    textarea, pre {
+      box-sizing: border-box;
+      width: 100%;
+      border: 1px solid #8886;
+      border-radius: 10px;
+      padding: 16px;
+      font: 14px/1.6 ui-monospace, monospace;
+    }
+
+    textarea {
+      min-height: 280px;
+      resize: vertical;
+      tab-size: 4;
+    }
+
+    pre {
+      min-height: 100px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    #status { font-size: 0.9rem; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <p class="muted">PYTHON · WEBASSEMBLY</p>
+    <h1>Python Playground</h1>
+    <p>Edit the code and run Python directly in your browser.
+       No Python server required.</p>
+  </header>
+
+  <label for="code"><strong>Python source</strong></label>
+  <textarea id="code" spellcheck="false">import math
+
+def circle_area(radius):
+    return math.pi * radius ** 2
+
+for radius in range(1, 6):
+    print(f"Radius {radius}: {circle_area(radius):.2f}")
+
+circle_area(10)</textarea>
+
+  <div class="toolbar">
+    <button id="run" disabled>Loading Python…</button>
+    <button id="reset">Reset example</button>
+    <span id="status" role="status">Initializing Pyodide…</span>
+  </div>
+
+  <h2>Output</h2>
+  <pre id="output" aria-live="polite">Starting Python runtime…</pre>
+
+  <script>
+    const editor = document.querySelector("#code");
+    const output = document.querySelector("#output");
+    const runButton = document.querySelector("#run");
+    const resetButton = document.querySelector("#reset");
+    const status = document.querySelector("#status");
+
+    const initialCode = editor.value;
+    let pyodide = null;
+    let busy = false;
+
+    function writeOutput(text) {
+      output.textContent += text;
+    }
+
+    async function initialize() {
+      try {
+        pyodide = await loadPyodide();
+
+        pyodide.setStdout({
+          batched: (text) => writeOutput(text + "\n")
+        });
+
+        pyodide.setStderr({
+          batched: (text) => writeOutput(text + "\n")
+        });
+
+        runButton.disabled = false;
+        runButton.textContent = "▶ Run Python";
+        status.textContent = `Python ${pyodide.runPython("import sys; sys.version.split()[0]")} ready`;
+        output.textContent = "Python is ready. Edit the code and press Run.";
+      } catch (error) {
+        status.textContent = "Failed to initialize Python";
+        output.textContent = String(error);
+      }
+    }
+
+    async function runCode() {
+      if (!pyodide || busy) return;
+
+      busy = true;
+      runButton.disabled = true;
+      status.textContent = "Running…";
+      output.textContent = ">>> Running Python\n";
+
+      try {
+        const result = await pyodide.runPythonAsync(editor.value);
+
+        if (result !== undefined && result !== null) {
+          writeOutput(String(result) + "\n");
+        }
+
+        status.textContent = "Execution completed";
+      } catch (error) {
+        writeOutput("\n" + String(error) + "\n");
+        status.textContent = "Execution failed";
+      } finally {
+        busy = false;
+        runButton.disabled = false;
+      }
+    }
+
+    runButton.addEventListener("click", runCode);
+
+    resetButton.addEventListener("click", () => {
+      editor.value = initialCode;
+      output.textContent = "Example restored. Press Run to execute it.";
+      status.textContent = pyodide ? "Python ready" : "Initializing Python…";
+    });
+
+    initialize();
+  </script>
+</body>
+</html>
