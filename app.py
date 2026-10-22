@@ -55,14 +55,13 @@ def _(extract_numeric_columns, load_penguins_data, mo):
     return df, numeric_columns
 
 
-
 @app.cell
-def _(mo, numeric_columns, df):
+def _(df, mo, numeric_columns):
     import pandas as pd
 
     # Numeric variables and categorical variables eligible for dummy encoding
     categorical_columns = df.select_dtypes(
-        include=["object", "category", "bool"]
+        include=["object", "str", "category", "bool"]
     ).columns.tolist()
 
     independent_vars = numeric_columns + categorical_columns
@@ -75,12 +74,11 @@ def _(mo, numeric_columns, df):
         label="Dependent variable (Y)",
         full_width=False,
     )
-
     return independent_vars, y_picker
 
 
 @app.cell
-def _(mo, independent_vars, y_picker):
+def _(independent_vars, mo, y_picker):
     # X can be any variable except the selected Y
     available_x_vars = [v for v in independent_vars if v != y_picker.value]
 
@@ -91,8 +89,13 @@ def _(mo, independent_vars, y_picker):
         full_width=False,
     )
 
-    return x_picker
-
+    mo.sidebar([
+            mo.md("## Linear Regression"),
+            mo.md("Select variables and explore relationships."),
+            x_picker,
+            y_picker,
+        ])
+    return (x_picker,)
 
 
 @app.cell
@@ -145,7 +148,7 @@ def _(analysis_df, build_assumptions_tab, mo, model, x_name, y_name):
 
 
 @app.cell
-def _(assumptions_with_plot, mo, results_tab, summary_tab, x_picker, y_picker):
+def _(assumptions_with_plot, mo, results_tab, summary_tab):
     tabs = mo.ui.tabs({
         "Data & Summary": summary_tab,
         "Assumptions": assumptions_with_plot,
@@ -158,10 +161,6 @@ def _(assumptions_with_plot, mo, results_tab, summary_tab, x_picker, y_picker):
             "Analyze penguin data relationships through interactive "
             "regression analysis."
         ),
-        mo.md("## Variables"),
-        mo.md("Select variables and explore relationships."),
-        x_picker,
-        y_picker,
         tabs,
     ], gap=2)
     return
