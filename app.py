@@ -1,14 +1,12 @@
-
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
 #     "marimo",
 #     "pandas",
 #     "numpy",
-#     "scikit-learn",
 #     "statsmodels",
 #     "plotly",
-#     "altair",
+#     "scipy",
 # ]
 # ///
 
@@ -23,128 +21,52 @@ def _():
     import marimo as mo
     import numpy as np
     import pandas as pd
-    import plotly.express as px
     import plotly.graph_objects as go
     import statsmodels.api as sm
+    from scipy import stats
 
-    from sklearn.datasets import load_diabetes, load_iris
-
-    return (
-        go,
-        load_diabetes,
-        load_iris,
-        mo,
-        np,
-        pd,
-        px,
-        sm,
-    )
+    return go, mo, np, pd, sm, stats
 
 
 @app.cell
-def _(load_diabetes, load_iris, np, pd):
-    # Dataset 1: Diabetes progression
-    diabetes = load_diabetes(as_frame=True)
-    diabetes_df = diabetes.frame.copy()
+def _(pd):
+    penguins = pd.read_csv("public/data/penguins.csv")
 
-    # Dataset 2: Iris measurements
-    iris = load_iris(as_frame=True)
-    iris_df = iris.frame.copy()
-    iris_df["species"] = [
-        iris.target_names[i] for i in iris.target
-    ]
+    numeric_columns = penguins.select_dtypes(include="number").columns.tolist()
 
-    # Dataset 3: Synthetic housing data
-    rng = np.random.default_rng(42)
-    n = 300
+    if not numeric_columns:
+        raise ValueError("The dataset contains no numeric columns.")
 
-    size = rng.normal(150, 40, n).clip(40, 300)
-    bedrooms = rng.integers(1, 6, n)
-    age = rng.integers(0, 80, n)
-
-    housing_df = pd.DataFrame({
-        "size_m2": size,
-        "bedrooms": bedrooms,
-        "age_years": age,
-        "price_k": (
-            45
-            + 2.8 * size
-            + 12 * bedrooms
-            - 0.7 * age
-            + rng.normal(0, 35, n)
-        ),
-    })
-
-    datasets = {
-        "Diabetes": diabetes_df,
-        "Iris": iris_df,
-        "Synthetic housing": housing_df,
-    }
-
-    return (datasets,)
-
-
-@app.cell
-def _(datasets, mo):
-    dataset_picker = mo.ui.dropdown(
-        options=list(datasets.keys()),
-        value="Synthetic housing",
-        label="Dataset",
-        full_width=True,
-    )
-
-    mo.sidebar([
-        mo.md("## Regression Explorer"),
-        mo.md("Choose your dataset and variables."),
-        dataset_picker,
-    ])
-
-    return (dataset_picker,)
-
-
-@app.cell
-def _(dataset_picker, datasets):
-    df = datasets[dataset_picker.value].copy()
-
-    numeric_columns = (
-        df.select_dtypes(include="number")
-        .columns.tolist()
-    )
+    df = penguins.dropna(subset=numeric_columns).copy()
 
     return df, numeric_columns
 
 
 @app.cell
-def _(mo, numeric_columns):
-    # Set defaults based on the selected dataset.
-    x_default = (
-        "size_m2"
-        if "size_m2" in numeric_columns
-        else numeric_columns[0]
-    )
-
-    y_default = (
-        "price_k"
-        if "price_k" in numeric_columns
-        else numeric_columns[-1]
-    )
-
+def _(df, mo, numeric_columns):
     x_picker = mo.ui.dropdown(
         options=numeric_columns,
-        value=x_default,
+        value=numeric_columns[0],
         label="Independent variable (X)",
         full_width=True,
     )
 
+    default_y = (
+        numeric_columns[1]
+        if len(numeric_columns) > 1
+        else numeric_columns[0]
+    )
+
     y_picker = mo.ui.dropdown(
         options=numeric_columns,
-        value=y_default,
+        value=default_y,
         label="Dependent variable (Y)",
         full_width=True,
     )
 
     mo.sidebar([
-        mo.md("### Model variables"),
+        mo.md("## Linear Regression"),
+        mo.md("Select variables and explore relationships."),
         x_picker,
         y_picker,
     ])
@@ -157,85 +79,53 @@ def _(df, x_picker, y_picker):
     x_name = x_picker.value
     y_name = y_picker.value
 
-    # Keep the original data available for missing-value counts.
-    missing_counts = df[[x_name, y_name]].isna().sum()
+    analysis_df = (
+        df[[x_name, y_name]]
+        .replace([float("inf"), -float("inf")], float("nan"))
+        .dropna()
+        .copy()
+    )
 
-    # Use complete observations for analysis.
-    analysis_df = df[[x_name, y_name]].dropna().copy()
-
-    return analysis_df, missing_counts, x_name, y_name
+    return analysis_df, x_name, y_name
 
 
 @app.cell
-def _(analysis_df, missing_counts, mo, x_name, y_name):
+def _(analysis_df, mo, x_name, y_name):
     if x_name == y_name:
-        descriptive_view = mo.vstack([
-            mo.md("## Descriptive statistics"),
-            mo.callout(
-                "Please select different variables for X and Y.",
-                kind="warn",
-            ),
-        ])
+        summary_tab = mo.callout(
+            "Please select different variables for X and Y.",
+            kind="warn",
+        )
+    elif analysis_df.empty:
+        summary_tab = mo.callout(
+            "No valid observations are available for the selected variables.",
+            kind="warn",
+        )
     else:
         summary = analysis_df.describe().T
         summary.index.name = "Variable"
         summary = summary.reset_index()
 
-        missing_table = missing_counts.rename(
-            "Missing observations"
-        ).rename_axis("Variable").reset_index()
-
-        descriptive_view = mo.vstack([
-            mo.md("## Descriptive statistics"),
+        summary_tab = mo.vstack([
+            mo.md("## Data Summary"),
             mo.hstack([
                 mo.stat(
-                    label="Complete observations",
+                    label="Observations",
                     value=str(len(analysis_df)),
                 ),
                 mo.stat(
-                    label="Selected variables",
+                    label="Variables",
                     value="2",
                 ),
             ], justify="start"),
-            mo.md(
-                f"**Dataset columns:** X = `{x_name}`, "
-                f"Y = `{y_name}`"
-            ),
-            mo.md("### Summary statistics"),
+            mo.md(f"**X = `{x_name}`** | **Y = `{y_name}`**"),
+            mo.md("### Summary Statistics"),
             mo.ui.table(summary.round(4)),
-            mo.md("### Missing observations before cleaning"),
-            mo.ui.table(missing_table),
-            mo.md("### Data preview"),
-            mo.ui.table(analysis_df.head(10)),
+            mo.md("### Data Preview"),
+            mo.ui.table(analysis_df.head(15)),
         ])
 
-    return (descriptive_view,)
-
-
-@app.cell
-def _(analysis_df, mo, px, x_name, y_name):
-    if x_name == y_name:
-        scatter_view = mo.md(
-            "Select two different variables to display a scatterplot."
-        )
-    else:
-        scatter_fig = px.scatter(
-            analysis_df,
-            x=x_name,
-            y=y_name,
-            title=f"{y_name} versus {x_name}",
-            template="plotly_white",
-            opacity=0.75,
-        )
-
-        scatter_fig.update_layout(
-            height=450,
-            margin=dict(l=30, r=20, t=60, b=30),
-        )
-
-        scatter_view = mo.ui.plotly(scatter_fig)
-
-    return (scatter_view,)
+    return (summary_tab,)
 
 
 @app.cell
@@ -243,35 +133,33 @@ def _(analysis_df, mo, pd, sm, x_name, y_name):
     model = None
 
     if x_name == y_name:
-        regression_view = mo.vstack([
-            mo.md("## Linear regression results"),
-            mo.callout(
-                "Choose different variables for X and Y.",
-                kind="warn",
-            ),
-        ])
-
+        results_tab = mo.callout(
+            "Select different variables for X and Y.",
+            kind="warn",
+        )
     elif len(analysis_df) < 3:
-        regression_view = mo.callout(
-            "At least three complete observations are required.",
+        results_tab = mo.callout(
+            "At least three valid observations are required.",
             kind="warn",
         )
-
     elif analysis_df[x_name].nunique() < 2:
-        regression_view = mo.callout(
-            "The independent variable must have at least "
-            "two distinct values.",
+        results_tab = mo.callout(
+            "The independent variable must contain at least two distinct values.",
             kind="warn",
         )
-
+    elif analysis_df[y_name].nunique() < 2:
+        results_tab = mo.callout(
+            "The dependent variable is constant; regression statistics are not meaningful.",
+            kind="warn",
+        )
     else:
         X = sm.add_constant(
             analysis_df[[x_name]],
             has_constant="add",
         )
-        y = analysis_df[y_name]
+        y_values = analysis_df[y_name]
 
-        model = sm.OLS(y, X).fit()
+        model = sm.OLS(y_values, X).fit()
 
         confidence_intervals = model.conf_int()
 
@@ -288,16 +176,11 @@ def _(analysis_df, mo, pd, sm, x_name, y_name):
         intercept = model.params["const"]
         slope = model.params[x_name]
 
-        regression_view = mo.vstack([
-            mo.md("## Linear regression results"),
+        results_tab = mo.vstack([
+            mo.md("## Regression Results"),
             mo.md(
-                f"**Dependent variable:** `{y_name}`  \n"
-                f"**Independent variable:** `{x_name}`"
-            ),
-            mo.md("### Estimated regression equation"),
-            mo.md(
-                f"`{y_name} = {intercept:.4f} "
-                f"+ ({slope:.4f} × {x_name})`"
+                f"**{y_name} = {intercept:.4f} "
+                f"+ ({slope:.4f} × {x_name})**"
             ),
             mo.hstack([
                 mo.stat(
@@ -317,33 +200,32 @@ def _(analysis_df, mo, pd, sm, x_name, y_name):
                     value=str(int(model.nobs)),
                 ),
             ], justify="start", gap=1),
-            mo.md("### Coefficients and confidence intervals"),
-            mo.ui.table(coefficients.round(4)),
-            mo.md("### Full OLS statistical summary"),
+            mo.md("### Coefficients & Confidence Intervals"),
+            mo.ui.table(coefficients.round(6)),
+            mo.md("### Full OLS Summary"),
             mo.plain(model.summary().as_text()),
         ])
 
-    return model, regression_view
+    return model, results_tab
 
 
 @app.cell
-def _(analysis_df, go, model, mo, x_name, y_name):
+def _(analysis_df, go, model, mo, np, stats, x_name, y_name):
     if model is None:
-        regression_plot = mo.md(
-            "The fitted regression plot will appear here "
-            "when a valid model can be estimated."
-        )
+        assumptions_with_plot = mo.vstack([
+            mo.md("### Assumptions Checks"),
+            mo.md(
+                "Visualizations will appear after a valid model is estimated."
+            ),
+        ])
     else:
-        regression_x = analysis_df[x_name].sort_values()
+        residuals = np.asarray(model.resid)
+        fitted_values = np.asarray(model.fittedvalues)
 
-        regression_y = (
-            model.params["const"]
-            + model.params[x_name] * regression_x
-        )
+        # Observed values and fitted regression line.
+        scatter_fig = go.Figure()
 
-        regression_fig = go.Figure()
-
-        regression_fig.add_trace(go.Scatter(
+        scatter_fig.add_trace(go.Scatter(
             x=analysis_df[x_name],
             y=analysis_df[y_name],
             mode="markers",
@@ -351,52 +233,139 @@ def _(analysis_df, go, model, mo, x_name, y_name):
             marker=dict(size=7, opacity=0.65),
         ))
 
-        regression_fig.add_trace(go.Scatter(
+        regression_x = np.linspace(
+            analysis_df[x_name].min(),
+            analysis_df[x_name].max(),
+            100,
+        )
+
+        regression_y = (
+            model.params["const"]
+            + model.params[x_name] * regression_x
+        )
+
+        scatter_fig.add_trace(go.Scatter(
             x=regression_x,
             y=regression_y,
             mode="lines",
-            name="Fitted OLS line",
+            name="Fitted line",
             line=dict(color="#E45756", width=3),
         ))
 
-        regression_fig.update_layout(
-            title="Observed values and fitted regression line",
+        scatter_fig.update_layout(
+            title=f"{y_name} vs {x_name} with Fitted Line",
             xaxis_title=x_name,
             yaxis_title=y_name,
             template="plotly_white",
-            height=450,
+            height=400,
             margin=dict(l=30, r=20, t=60, b=30),
         )
 
-        regression_plot = mo.ui.plotly(regression_fig)
+        # Residuals versus fitted values.
+        residual_fig = go.Figure()
 
-    return (regression_plot,)
+        residual_fig.add_trace(go.Scatter(
+            x=fitted_values,
+            y=residuals,
+            mode="markers",
+            name="Residuals",
+            marker=dict(size=6, opacity=0.6),
+        ))
+
+        residual_fig.add_hline(
+            y=0,
+            line_dash="dash",
+            line_color="red",
+        )
+
+        residual_fig.update_layout(
+            title="Residuals vs Fitted Values",
+            xaxis_title="Fitted Values",
+            yaxis_title="Residuals",
+            template="plotly_white",
+            height=400,
+            margin=dict(l=30, r=20, t=60, b=30),
+        )
+
+        # Normal Q-Q plot using correct theoretical normal quantiles.
+        theoretical_quantiles, ordered_residuals = stats.probplot(
+            residuals,
+            dist="norm",
+            fit=False,
+        )
+
+        theoretical_quantiles = np.asarray(theoretical_quantiles)
+        ordered_residuals = np.asarray(ordered_residuals)
+
+        qq_fig = go.Figure()
+
+        qq_fig.add_trace(go.Scatter(
+            x=theoretical_quantiles,
+            y=ordered_residuals,
+            mode="markers",
+            name="Residuals",
+            marker=dict(size=6, opacity=0.6),
+        ))
+
+        # Reference line based on the fitted normal distribution.
+        qq_slope, qq_intercept, _ = stats.probplot(
+            residuals,
+            dist="norm",
+            fit=True,
+        )[1]
+
+        qq_x = np.array([
+            theoretical_quantiles.min(),
+            theoretical_quantiles.max(),
+        ])
+
+        qq_fig.add_trace(go.Scatter(
+            x=qq_x,
+            y=qq_intercept + qq_slope * qq_x,
+            mode="lines",
+            name="Normal reference line",
+            line=dict(color="red", dash="dash"),
+        ))
+
+        qq_fig.update_layout(
+            title="Normal Q-Q Plot of Residuals",
+            xaxis_title="Theoretical Normal Quantiles",
+            yaxis_title="Ordered Residuals",
+            template="plotly_white",
+            height=400,
+            margin=dict(l=30, r=20, t=60, b=30),
+        )
+
+        assumptions_with_plot = mo.vstack([
+            mo.md("### Scatter Plot with Fitted Line"),
+            mo.ui.plotly(scatter_fig),
+            mo.md("### Residuals vs Fitted Values"),
+            mo.ui.plotly(residual_fig),
+            mo.md("### Normal Q-Q Plot"),
+            mo.ui.plotly(qq_fig),
+        ])
+
+    return (assumptions_with_plot,)
 
 
 @app.cell
 def _(
-    descriptive_view,
+    assumptions_with_plot,
     mo,
-    regression_plot,
-    regression_view,
-    scatter_view,
+    results_tab,
+    summary_tab,
 ):
     tabs = mo.ui.tabs({
-        "Descriptive statistics": mo.vstack([
-            descriptive_view,
-            scatter_view,
-        ], gap=2),
-        "Linear regression": mo.vstack([
-            regression_view,
-            regression_plot,
-        ], gap=2),
+        "Data & Summary": summary_tab,
+        "Assumptions": assumptions_with_plot,
+        "Results": results_tab,
     })
 
     mo.vstack([
-        mo.md("# Regression Explorer"),
+        mo.md("# Linear Regression Explorer"),
         mo.md(
-            "Explore built-in datasets, inspect descriptive "
-            "statistics, and estimate a simple linear regression."
+            "Analyze penguin data relationships through interactive "
+            "regression analysis."
         ),
         tabs,
     ], gap=2)
