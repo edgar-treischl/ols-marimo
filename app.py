@@ -71,8 +71,8 @@ def _(df, mo, numeric_columns):
         value=numeric_columns[1]
         if len(numeric_columns) > 1
         else numeric_columns[0] if numeric_columns else None,
-        label="Dependent variable (Y)",
-        full_width=False,
+        label="Outcome:",
+        full_width=True,
     )
     return independent_vars, y_picker
 
@@ -85,16 +85,18 @@ def _(independent_vars, mo, y_picker):
     x_picker = mo.ui.dropdown(
         options=available_x_vars,
         value=available_x_vars[0] if available_x_vars else None,
-        label="Independent variable (X)",
-        full_width=False,
+        label="X Variable",
+        full_width=True,
     )
 
-    mo.sidebar([
-            mo.md("## Linear Regression"),
-            mo.md("Select variables and explore relationships."),
-            x_picker,
-            y_picker,
-        ])
+
+    mo.sidebar(
+    [
+        mo.md("Select variables."),
+        y_picker,
+        x_picker,
+    ],
+    width="320px",)
     return (x_picker,)
 
 
