@@ -16,7 +16,7 @@ __generated_with = "0.25.2"
 app = marimo.App(width="full")
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     import marimo as mo
     from src.helpers import (

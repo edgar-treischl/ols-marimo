@@ -48,6 +48,39 @@ def build_summary_tab(mo, analysis_df, x_name, y_name):
     ])
 
 
+def dataframe_to_html_table(mo, df):
+    """Render a DataFrame as a styled, static HTML table."""
+    formatted = df.copy()
+
+    for col in formatted.columns:
+        if pd.api.types.is_numeric_dtype(formatted[col]):
+            formatted[col] = formatted[col].map(
+                lambda x: f"{x:.6f}" if pd.notna(x) else "—"
+            )
+
+    return mo.Html(
+        formatted.to_html(
+            index=False,
+            escape=True,
+            border=0,
+            classes=["regression-table"],
+        ).replace(
+            '<table ',
+            '<table style="'
+            'width:100%; border-collapse:collapse; '
+            'font-size:0.9rem;" '
+        ).replace(
+            '<th>',
+            '<th style="text-align:left; padding:8px 12px; '
+            'border-bottom:2px solid #ccc;">'
+        ).replace(
+            '<td>',
+            '<td style="padding:8px 12px; '
+            'border-bottom:1px solid #ddd;">'
+        )
+    )
+
+
 def build_results_tab(mo, analysis_df, model, x_name, y_name):
     """Build the Results tab content with regression statistics.
     
@@ -120,6 +153,7 @@ def build_results_tab(mo, analysis_df, model, x_name, y_name):
         ], justify="start", gap=1),
         mo.md("### Coefficients & Confidence Intervals"),
         mo.ui.table(coefficients.round(6)),
+        #dataframe_to_html_table(mo, coefficients),
         mo.md("### Full OLS Summary"),
         mo.plain(model.summary().as_text()),
     ])
