@@ -29,8 +29,9 @@ def _():
 
 
 @app.cell
-def _(pd):
-    penguins = pd.read_csv("public/data/penguins.csv")
+def _(mo, pd):
+    _data_path = mo.notebook_location() / "public" / "data" / "penguins.csv"
+    penguins = pd.read_csv(str(_data_path))
 
     numeric_columns = penguins.select_dtypes(include="number").columns.tolist()
 
