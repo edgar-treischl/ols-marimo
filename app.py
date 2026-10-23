@@ -51,11 +51,14 @@ def import_data():
         load_penguins_data,
         prepare_analysis_data,
         validate_regression_inputs,
-        scatter_plot,
     )
 
     from src.tabs import (
         build_summary_tab,
+    )
+
+    from src.plots import (
+        scatter_plot,
     )
 
 
@@ -113,7 +116,6 @@ def _(penguins, prepare_analysis_data, validate_regression_inputs):
     print(f"Predictor: {x_name}")
     print(f"Outcome: {y_name}")
     print(f"Observations: {len(analysis_df)}")
-
     return x_name, y_name
 
 
@@ -145,6 +147,7 @@ def _(mo):
 @app.cell
 def _(penguins, scatter_plot, x_name, y_name):
     scatter_plot(penguins, x=x_name, y=y_name)
+
     return
 
 
