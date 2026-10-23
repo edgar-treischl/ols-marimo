@@ -1,13 +1,16 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#     "marimo",
-#     "pandas",
-#     "numpy",
-#     "seaborn",
-#     "statsmodels",
-#     "plotly",
-#     "scipy",
+#     "matplotlib==3.11.2",
+#     "altair==6.3.0",
+#     "ipython==9.17.1",
+#     "marimo>=0.25.2",
+#     "numpy==2.5.4",
+#     "pandas==3.1.0",
+#     "plotly==7.1.0",
+#     "scipy==1.18.1",
+#     "statsmodels==0.15.0",
+#     "seaborn==0.13.2",
 # ]
 # ///
 
@@ -61,8 +64,8 @@ def import_data():
         scatter_plot,
     )
 
-    data_path = Path("public/data/penguins.csv")
-    penguins = load_penguins_data(data_path)
+
+    penguins = load_penguins_data()
 
     numeric_columns = extract_numeric_columns(penguins)
     df = penguins.dropna(subset=numeric_columns).copy()
