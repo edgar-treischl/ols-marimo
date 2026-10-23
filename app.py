@@ -4,6 +4,7 @@
 #     "marimo",
 #     "pandas",
 #     "numpy",
+#     "seaborn",
 #     "statsmodels",
 #     "plotly",
 #     "scipy",

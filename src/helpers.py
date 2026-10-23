@@ -12,20 +12,13 @@ from pandas.api.types import (
 )
 
 
-def load_penguins_data(data_path):
-    """Load penguin dataset from CSV file or URL.
-    
-    Args:
-        data_path: Path to the penguins.csv file (supports http/https URLs).
-        
-    Returns:
-        DataFrame containing the penguins dataset.
-    """
-    if str(data_path).startswith(("http://", "https://")):
-        with urlopen(str(data_path)) as response:
-            return pd.read_csv(BytesIO(response.read()))
-    return pd.read_csv(str(data_path))
+import seaborn as sns
 
+def load_penguins_data(data_path=None):
+    """Load the Palmer Penguins dataset."""
+    if data_path is None:
+        return sns.load_dataset("penguins")
+    return pd.read_csv(data_path)
 
 def extract_numeric_columns(df):
     """Extract numeric columns from a DataFrame.
