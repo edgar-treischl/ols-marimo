@@ -3,7 +3,7 @@
 from io import BytesIO
 from urllib.request import urlopen
 import pandas as pd
-
+import statsmodels.api as sm
 
 import seaborn as sns
 

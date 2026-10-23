@@ -28,14 +28,13 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""
-    First, run the preparation steps below. "
-        "The import and data-loading cell runs even when hidden.
+    mo.md(r"""
+    First, run the preparation steps below. The import and data-loading cell runs even when hidden.
     """)
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def import_data():
     import marimo as mo
     import numpy as np
@@ -86,23 +85,73 @@ def import_data():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""
-    ## 1. Inspect the data
+    mo.md(r"""
+    ## 00 Select Variables
+
+    Pick an outcome (**y**) and a predictor variable (**x**) from the *penguins* data.
     """)
     return
 
 
-@app.cell
-def _(mo, penguins):
-    mo.ui.table(penguins.head(15))
+@app.cell(hide_code=True)
+def outcome(mo, penguins):
+    ## Select the Outcome variable
+    numerical_variables = penguins.select_dtypes(include="number").columns.tolist()
+
+    outcome = mo.ui.dropdown(
+        options=numerical_variables,
+        label="Variable: ",
+        value="body_mass_g"
+    )
+
+    mo.vstack([
+        mo.md("### Outcome variable (Y)"),
+        outcome,
+    ])
+    return (outcome,)
+
+
+@app.cell(hide_code=True)
+def predictor(mo, outcome, penguins):
+    # Select Predictor
+
+    predictor_options = [
+        col for col in penguins.columns if col != outcome.value
+    ]
+
+    predictor = mo.ui.dropdown(
+        options=predictor_options,
+        label="Variable: ",
+        value=predictor_options[3],
+    )
+
+    mo.vstack([
+        mo.md("### Predictor variable (X)"),
+        predictor,
+    ])
+    return (predictor,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    **You have chosen the following variables:**
+    """)
     return
 
 
-@app.cell
-def _(penguins, prepare_analysis_data, validate_regression_inputs):
-    # Configure the regression
-    y_name = "body_mass_g"
-    x_name = "bill_length_mm"
+@app.cell(hide_code=True)
+def _(
+    mo,
+    outcome,
+    penguins,
+    predictor,
+    prepare_analysis_data,
+    validate_regression_inputs,
+):
+    # Valid choices
+    y_name = outcome.value
+    x_name = predictor.value
 
     analysis_df = prepare_analysis_data(penguins, x_name, y_name)
 
@@ -113,10 +162,28 @@ def _(penguins, prepare_analysis_data, validate_regression_inputs):
     if not is_valid:
         raise ValueError(message)
 
-    print(f"Predictor: {x_name}")
-    print(f"Outcome: {y_name}")
-    print(f"Observations: {len(analysis_df)}")
+    mo.md(
+        f"""
+        **Outcome (Y):** `{outcome.value}`
+
+        **Predictor (X):** `{predictor.value}`
+        """
+    )
     return x_name, y_name
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ## 01. Inspect the data
+    """)
+    return
+
+
+@app.cell
+def _(mo, penguins):
+    mo.ui.table(penguins.head(10))
+    return
 
 
 @app.cell
@@ -147,7 +214,6 @@ def _(mo):
 @app.cell
 def _(penguins, scatter_plot, x_name, y_name):
     scatter_plot(penguins, x=x_name, y=y_name)
-
     return
 
 
