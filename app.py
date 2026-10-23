@@ -1,3 +1,15 @@
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "marimo",
+#     "pandas",
+#     "numpy",
+#     "statsmodels",
+#     "plotly",
+#     "scipy",
+# ]
+# ///
+
 import marimo
 
 __generated_with = "0.25.2"
@@ -35,12 +47,17 @@ def import_data():
     from plotly.subplots import make_subplots
     from scipy import stats
 
+    import altair as alt
+
+    import matplotlib.pyplot as plt
+
     from src.helpers import (
         extract_numeric_columns,
         fit_regression_model,
         load_penguins_data,
         prepare_analysis_data,
         validate_regression_inputs,
+        scatter_plot,
     )
 
     data_path = Path("public/data/penguins.csv")
@@ -58,6 +75,7 @@ def import_data():
         pd,
         prepare_analysis_data,
         px,
+        scatter_plot,
         sm,
         stats,
         validate_regression_inputs,
@@ -82,7 +100,7 @@ def _(df):
 def _(df, prepare_analysis_data, validate_regression_inputs):
     # Configure the regression
     y_name = "body_mass_g"
-    x_name = "flipper_length_mm"
+    x_name = "bill_length_mm"
 
     analysis_df = prepare_analysis_data(df, x_name, y_name)
 
@@ -105,6 +123,30 @@ def _(df, prepare_analysis_data, validate_regression_inputs):
 def _(analysis_df, x_name, y_name):
     # Descriptive statistics
     analysis_df[[x_name, y_name]].describe().T
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 02 Linear Association
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    In a linear regression, we estimate the effect of an independent variable X on a dependent variable Y. Often, we use several independent variables to predict Y, but let’s stick to the simple model with two variables. The principals of a linear regression are the same.
+
+    So, what happens when we regress X on Y? We calculate the linear association between X and Y and we try to fit a line in accordance to our data. We can use a scatter plot to check the linear association. Let’s have a look for the chosen variables:
+    """)
+    return
+
+
+@app.cell
+def _(analysis_df, scatter_plot, x_name, y_name):
+    scatter_plot(analysis_df, x=x_name, y=y_name)
     return
 
 
@@ -180,7 +222,7 @@ def _(go, make_subplots, model, np):
     fitted_values = np.asarray(model.fittedvalues)
     residuals = np.asarray(model.resid)
 
-    fig = make_subplots(
+    fig_resid = make_subplots(
         rows=1,
         cols=2,
         subplot_titles=(
@@ -189,7 +231,7 @@ def _(go, make_subplots, model, np):
         ),
     )
 
-    fig.add_trace(
+    fig_resid.add_trace(
         go.Scatter(
             x=fitted_values,
             y=residuals,
@@ -200,7 +242,7 @@ def _(go, make_subplots, model, np):
         col=1,
     )
 
-    fig.add_hline(
+    fig_resid.add_hline(
         y=0,
         line_dash="dash",
         line_color="red",
@@ -208,7 +250,7 @@ def _(go, make_subplots, model, np):
         col=1,
     )
 
-    fig.add_trace(
+    fig_resid.add_trace(
         go.Histogram(
             x=residuals,
             name="Residuals",
@@ -217,21 +259,19 @@ def _(go, make_subplots, model, np):
         col=2,
     )
 
-    fig.update_layout(
+    fig_resid.update_layout(
         template="plotly_white",
         showlegend=False,
         title_text="Regression diagnostics",
     )
 
-    fig
-    return
+    fig_resid
+    return (residuals,)
 
 
 @app.cell
-def _(model, np, sm, stats):
+def _(model, np, residuals, sm, stats):
     # Normality and heteroscedasticity tests
-    residuals = np.asarray(model.resid)
-
     if 3 <= len(residuals) <= 5000:
         shapiro_stat, shapiro_p = stats.shapiro(residuals)
 
