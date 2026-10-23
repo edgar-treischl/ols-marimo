@@ -146,17 +146,35 @@ def predictor(mo, outcome, penguins):
     return (predictor,)
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## 01. Inspect the data
-    """)
-    return
+@app.cell
+def _(mo, penguins, scatter_plot, x_name, y_name):
+    # Tab 1: Inspect the data
+    inspect_tab = mo.vstack([
+        mo.md("""
+        ## 01. Inspect the data
+    
+         In a linear regression, we examine the relationship between an independent variable (X) and a dependent variable (Y). Although regression models can include several independent variables to explain or predict Y, we will start with the simplest case: a model with just one X and one Y. The basic principles are the same in more complex models.
+
+        The goal of a linear regression is to find a straight line that best describes the relationship between X and Y in our data. This line helps us understand how changes in X are associated with changes in Y.
+        """),
+        mo.ui.table(penguins.head(10)),
+        mo.md("""
+        Before estimating the regression, we can use a scatter plot to explore the relationship between our chosen variables. Each point represents an observation in the dataset. By looking at the pattern of points, we can assess whether a linear relationship seems plausible.
+
+        Let's take a look at the scatter plot for your selected variables.
+        """),
+        scatter_plot(penguins, x=x_name, y=y_name),
+    ])
+    return (inspect_tab,)
 
 
 @app.cell
-def _(mo, penguins):
-    mo.ui.table(penguins.head(10))
+def _(inspect_tab, mo):
+    tabs = mo.ui.tabs({
+        "Inspect the data": inspect_tab,
+        "Linear Effects": mo.md("Content")
+    })
+    tabs
     return
 
 
