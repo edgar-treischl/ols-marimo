@@ -1,16 +1,14 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#     "matplotlib==3.11.2",
 #     "altair==6.3.0",
-#     "ipython==9.17.1",
 #     "marimo>=0.25.2",
 #     "numpy==2.5.4",
 #     "pandas==3.1.0",
 #     "plotly==7.1.0",
 #     "scipy==1.18.1",
-#     "statsmodels==0.15.0",
 #     "seaborn==0.13.2",
+#     "statsmodels==0.15.0",
 # ]
 # ///
 
@@ -39,22 +37,14 @@ def _(mo):
 
 @app.cell
 def import_data():
-    from pathlib import Path
-
     import marimo as mo
     import numpy as np
     import pandas as pd
     import plotly.express as px
     import plotly.graph_objects as go
     import statsmodels.api as sm
-    from IPython.display import HTML
     from plotly.subplots import make_subplots
     from scipy import stats
-
-    import altair as alt
-
-    import matplotlib.pyplot as plt
-
     from src.helpers import (
         extract_numeric_columns,
         fit_regression_model,
@@ -64,19 +54,24 @@ def import_data():
         scatter_plot,
     )
 
+    from src.tabs import (
+        build_summary_tab,
+    )
 
-    penguins = load_penguins_data()
 
-    numeric_columns = extract_numeric_columns(penguins)
-    df = penguins.dropna(subset=numeric_columns).copy()
+
+
+    penguins_raw = load_penguins_data()
+    penguins = penguins_raw.dropna().copy()
     return (
-        df,
+        build_summary_tab,
         fit_regression_model,
         go,
         make_subplots,
         mo,
         np,
         pd,
+        penguins,
         prepare_analysis_data,
         px,
         scatter_plot,
@@ -95,18 +90,18 @@ def _(mo):
 
 
 @app.cell
-def _(df):
-    df.head()
+def _(mo, penguins):
+    mo.ui.table(penguins.head(15))
     return
 
 
 @app.cell
-def _(df, prepare_analysis_data, validate_regression_inputs):
+def _(penguins, prepare_analysis_data, validate_regression_inputs):
     # Configure the regression
     y_name = "body_mass_g"
     x_name = "bill_length_mm"
 
-    analysis_df = prepare_analysis_data(df, x_name, y_name)
+    analysis_df = prepare_analysis_data(penguins, x_name, y_name)
 
     is_valid, message = validate_regression_inputs(
         analysis_df, x_name, y_name
@@ -119,14 +114,13 @@ def _(df, prepare_analysis_data, validate_regression_inputs):
     print(f"Outcome: {y_name}")
     print(f"Observations: {len(analysis_df)}")
 
-    analysis_df.head()
-    return analysis_df, x_name, y_name
+    return x_name, y_name
 
 
 @app.cell
-def _(analysis_df, x_name, y_name):
+def _(penguins, x_name, y_name):
     # Descriptive statistics
-    analysis_df[[x_name, y_name]].describe().T
+    penguins[[x_name, y_name]].describe().T
     return
 
 
@@ -149,23 +143,29 @@ def _(mo):
 
 
 @app.cell
-def _(analysis_df, scatter_plot, x_name, y_name):
-    scatter_plot(analysis_df, x=x_name, y=y_name)
+def _(penguins, scatter_plot, x_name, y_name):
+    scatter_plot(penguins, x=x_name, y=y_name)
     return
 
 
 @app.cell
-def _(analysis_df, x_name, y_name):
+def _(build_summary_tab, mo, penguins, x_name, y_name):
+    build_summary_tab(mo, penguins, x_name, y_name)
+    return
+
+
+@app.cell
+def _(penguins, x_name, y_name):
     # Pearson correlation
-    correlation = analysis_df[[x_name, y_name]].corr().iloc[0, 1]
+    correlation = penguins[[x_name, y_name]].corr().iloc[0, 1]
     print(f"Pearson correlation: {correlation:.4f}")
     return
 
 
 @app.cell
-def _(analysis_df, fit_regression_model, pd, x_name, y_name):
+def _(fit_regression_model, pd, penguins, x_name, y_name):
     # Fit the regression model
-    model = fit_regression_model(analysis_df, x_name, y_name)
+    model = fit_regression_model(penguins, x_name, y_name)
     confidence_intervals = model.conf_int()
 
     coefficients = pd.DataFrame(
@@ -197,10 +197,10 @@ def _(model):
 
 
 @app.cell
-def _(analysis_df, px, x_name, y_name):
+def _(penguins, px, x_name, y_name):
     # Scatter plot and fitted regression line
     fig = px.scatter(
-        analysis_df,
+        penguins,
         x=x_name,
         y=y_name,
         title=f"{y_name} vs. {x_name}",

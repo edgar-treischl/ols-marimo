@@ -6,45 +6,36 @@ import plotly.graph_objects as go
 from scipy import stats
 
 
-def build_summary_tab(mo, analysis_df, x_name, y_name):
-    """Build the Data & Summary tab content.
-    
-    Args:
-        mo: marimo module.
-        analysis_df: DataFrame with selected analysis data.
-        x_name: Name of independent variable.
-        y_name: Name of dependent variable.
-        
-    Returns:
-        marimo UI component for summary tab.
-    """
-    if analysis_df.empty:
+def build_summary_tab(mo, data, x_name, y_name):
+    """Build the Data & Summary tab content."""
+    if data.empty:
         return mo.callout(
             "No valid observations are available for the selected variables.",
             kind="warn",
         )
-    
-    summary = analysis_df.describe().T
+
+    summary = data.describe().T
     summary.index.name = "Variable"
     summary = summary.reset_index()
-    
+
     return mo.vstack([
         mo.md("## Data Summary"),
-        mo.hstack([
-            mo.stat(
-                label="Observations",
-                value=str(len(analysis_df)),
-            ),
-            mo.stat(
-                label="Variables",
-                value="2",
-            ),
-        ], justify="start"),
+        mo.hstack(
+            [
+                mo.stat(
+                    label="Observations",
+                    value=str(len(data)),
+                ),
+                mo.stat(
+                    label="Variables",
+                    value=str(len(data.columns)),
+                ),
+            ],
+            justify="start",
+        ),
         mo.md(f"**X = `{x_name}`** | **Y = `{y_name}`**"),
         mo.md("### Summary Statistics"),
         mo.ui.table(summary.round(4)),
-        mo.md("### Data Preview"),
-        mo.ui.table(analysis_df.head(15)),
     ])
 
 
