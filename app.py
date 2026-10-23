@@ -62,9 +62,6 @@ def import_data():
 
     from src.tabs import (
         build_summary_tab,
-    )
-
-    from src.tabs2 import (
         build_inspect_tab,
     )
 
