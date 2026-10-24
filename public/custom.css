@@ -1,0 +1,286 @@
+/* ========================================
+   Marimo — Global Theme
+   ======================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+:root {
+    /* Color palette */
+    --app-highlight: #0098D4;
+    --app-heading: #0098D4;
+    --app-text: #252936;
+    --app-muted: #5B6475;
+    --app-border: #D9DEEA;
+
+    /* Typography */
+    --app-font-size: 18px;
+    --app-body-font: "Playfair Display", Georgia, serif;
+    --app-heading-font: "Playfair Display", Georgia, serif;
+
+    /* Layout */
+    --app-line-height: 1.65;
+    --app-content-spacing: 1.25rem;
+}
+
+/* ========================================
+   Global typography
+   ======================================== */
+
+body {
+    font-family: var(--app-body-font);
+    font-size: var(--app-font-size);
+    line-height: var(--app-line-height);
+    color: var(--app-muted);
+}
+
+#root,
+main,
+[data-testid="marimo-app"] {
+    font-family: var(--app-body-font);
+    font-size: var(--app-font-size);
+    color: var(--app-muted);
+}
+
+/* ========================================
+   Headings
+   ======================================== */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+    font-family: var(--app-heading-font);
+    color: var(--app-heading) !important;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+}
+
+h1,
+.markdown h1 {
+    font-size: clamp(2.6rem, 5vw, 3.5rem) !important;
+    line-height: 1.15;
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+h2,
+.markdown h2 {
+    font-size: clamp(1.9rem, 3.5vw, 2.4rem) !important;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+h3,
+.markdown h3 {
+    font-size: clamp(1.5rem, 2.5vw, 1.8rem) !important;
+    margin-top: 1.75rem;
+    margin-bottom: 0.75rem;
+}
+
+h4,
+.markdown h4 {
+    font-size: 1.35rem !important;
+    margin-top: 1.5rem;
+    margin-bottom: 0.65rem;
+}
+
+h5,
+h6,
+.markdown h5,
+.markdown h6 {
+    font-size: 1.15rem !important;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+/* ========================================
+   Paragraphs and Markdown content
+   ======================================== */
+
+p,
+.paragraph,
+.markdown .paragraph {
+    font-size: clamp(1.25rem, 1.5vw, 1.4rem) !important;
+    line-height: 1.6 !important;
+    color: var(--app-muted);
+    margin-top: 0.5rem;
+    margin-bottom: 1.15rem !important;
+}
+
+/* ========================================
+   Lists
+   ======================================== */
+
+ul,
+ol {
+    padding-left: 1.6em;
+    margin-top: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+li,
+li p,
+li .paragraph,
+ul .paragraph,
+ol .paragraph {
+    font-size: 1.2rem !important;
+    line-height: 1.7 !important;
+    margin-bottom: 0.4rem !important;
+}
+
+li::marker {
+    color: var(--app-highlight);
+}
+
+/* ========================================
+   Links and emphasis
+   ======================================== */
+
+a {
+    color: var(--app-highlight);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: #314DA8;
+}
+
+strong,
+b {
+    color: var(--app-text);
+    font-weight: 700;
+}
+
+em,
+i {
+    font-style: italic;
+}
+
+/* ========================================
+   Inline and block code
+   ======================================== */
+
+code,
+pre {
+    font-family: "JetBrains Mono", "Cascadia Code",
+                 Consolas, monospace;
+    font-size: 0.9em;
+}
+
+code {
+    overflow-wrap: anywhere;
+}
+
+pre {
+    line-height: 1.6;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--app-border);
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+/* ========================================
+   Tables
+   ======================================== */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+}
+
+th {
+    color: var(--app-highlight);
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-align: left;
+}
+
+td {
+    color: var(--app-muted);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+th,
+td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--app-border);
+}
+
+/* ========================================
+   Form controls
+   ======================================== */
+
+input,
+textarea,
+select,
+button {
+    font: inherit;
+}
+
+label {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* ========================================
+   Horizontal rules
+   ======================================== */
+
+hr {
+    border: 0;
+    border-top: 1px solid var(--app-border);
+    margin: 2.5rem 0;
+}
+
+/* ========================================
+   Responsive adjustments
+   ======================================== */
+
+@media (max-width: 768px) {
+    :root {
+        --app-font-size: 16px;
+    }
+
+    h1,
+    .markdown h1 {
+        margin-bottom: 1rem;
+    }
+
+    p,
+    .paragraph,
+    .markdown .paragraph {
+        font-size: 1.15rem !important;
+        line-height: 1.6 !important;
+    }
+
+    li,
+    li p,
+    li .paragraph {
+        font-size: 1.05rem !important;
+    }
+
+    th,
+    td {
+        padding: 0.6rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    a {
+        transition: none;
+    }
+}

@@ -13,8 +13,10 @@
 
 import marimo
 
+
+
 __generated_with = "0.25.2"
-app = marimo.App(width="medium", app_title="Palmer Regression Analysis")
+app = marimo.App(width="medium", app_title="Palmer Regression Analysis", css_file="public/custom.css")
 
 
 @app.cell(hide_code=True)
