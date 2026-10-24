@@ -16,6 +16,7 @@ def build_summary_tab(mo, data, x_name, y_name):
     summary = data.describe().T
     summary.index.name = "Variable"
     summary = summary.reset_index()
+    
 
     return mo.vstack([
         mo.md("## Data Summary"),
@@ -65,4 +66,8 @@ def build_inspect_tab(mo, data, scatter_plot, x_name, y_name):
         to explore the relationship between your variables.
         """),
         scatter_plot(data, x=x_name, y=y_name),
+        mo.md("""
+        Finally, some BS.
+        """),
+        mo.ui.table(data[[x_name, y_name]].describe().T),
     ])

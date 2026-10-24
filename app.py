@@ -149,12 +149,11 @@ def predictor(mo, outcome, penguins):
 
 
 @app.cell
-def _():
-    return
+def _(build_inspect_tab, mo, outcome, penguins, predictor, scatter_plot):
+    # Descriptive statistics
+    x_name = predictor.value
+    y_name = outcome.value
 
-
-@app.cell
-def _(build_inspect_tab, mo, penguins, scatter_plot, x_name, y_name):
     inspect_content = build_inspect_tab(
             mo=mo,
             data=penguins,
@@ -168,16 +167,6 @@ def _(build_inspect_tab, mo, penguins, scatter_plot, x_name, y_name):
         "Linear Effects": mo.md("Content")
     })
     tabs
-    return
-
-
-@app.cell
-def _(outcome, penguins, predictor):
-    # Descriptive statistics
-    x_name = predictor.value
-    y_name = outcome.value
-
-    penguins[[x_name, y_name]].describe().T
     return x_name, y_name
 
 

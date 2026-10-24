@@ -4,7 +4,7 @@ install:
 	uv sync --locked
 
 dev:
-	uv run marimo edit app.py --watch --host 127.0.0.1 --port 2718
+	uv run marimo edit app.py --watch --sandbox --host 127.0.0.1 --port 2718
 
 check:
 	uv run marimo check app.py
