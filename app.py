@@ -65,6 +65,10 @@ def import_data():
         build_inspect_tab,
     )
 
+    from src.tab_02 import (
+        build_linear_tab,
+    )
+
     from src.plots import (
         scatter_plot,
         scatter_regression_plot,
@@ -82,6 +86,7 @@ def import_data():
     penguins = penguins_raw.dropna().copy()
     return (
         build_inspect_tab,
+        build_linear_tab,
         build_summary_tab,
         error_plot,
         explained_variance_plot,
@@ -149,11 +154,24 @@ def predictor(mo, outcome, penguins):
 
 
 @app.cell
-def _(build_inspect_tab, mo, outcome, penguins, predictor, scatter_plot):
-    # Descriptive statistics
+def _(outcome, predictor):
+    # User choices
     x_name = predictor.value
     y_name = outcome.value
+    return x_name, y_name
 
+
+@app.cell
+def _(
+    build_inspect_tab,
+    build_linear_tab,
+    mo,
+    penguins,
+    scatter_plot,
+    x_name,
+    y_name,
+):
+    # Define tabs
     inspect_content = build_inspect_tab(
             mo=mo,
             data=penguins,
@@ -162,48 +180,30 @@ def _(build_inspect_tab, mo, outcome, penguins, predictor, scatter_plot):
             y_name=y_name,
         )
 
-    tabs = mo.ui.tabs({
-        "Inspect the data": inspect_content,
-        "Linear Effects": mo.md("Content")
-    })
-    tabs
-    return x_name, y_name
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ## 02 Linear Association
-
-    In a linear regression, we examine the relationship between an independent variable (X) and a dependent variable (Y). Although regression models can include several independent variables to explain or predict Y, we will start with the simplest case: a model with just one X and one Y. The basic principles are the same in more complex models.
-
-    The goal of a linear regression is to find a straight line that best describes the relationship between X and Y in our data. This line helps us understand how changes in X are associated with changes in Y.
-
-    Before estimating the regression, we can use a scatter plot to explore the relationship between our chosen variables. Each point represents an observation in the dataset. By looking at the pattern of points, we can assess whether a linear relationship seems plausible.
-
-    Let's take a look at the scatter plot for your selected variables.
-    """)
-    return
+    linear_content = build_linear_tab(
+        mo=mo, 
+        data=penguins, 
+        scatter_plot=scatter_plot,
+        x_name=x_name,
+        y_name=y_name,)
+    return inspect_content, linear_content
 
 
 @app.cell
-def _(penguins, scatter_plot, x_name, y_name):
-    scatter_plot(penguins, x=x_name, y=y_name)
+def _(inspect_content, linear_content, mo):
+    # Create tabs
+    tabs = mo.ui.tabs({
+        "Inspect the data": inspect_content,
+        "Linear Effects": linear_content
+    })
+    tabs
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    What do you observe in the scatter plot? Does there appear to be a linear association between X and Y? In other words, do the points follow an upward or downward trend that could be described by a straight line?
-
-    To investigate further, you can also examine the summary statistics of your variables. If both X and Y are numerical, look at their correlation coefficient to assess the direction and strength of their linear relationship.
-
-    - A positive correlation means that higher values of X tend to be associated with higher values of Y.
-    - A negative correlation means that higher values of X tend to be associated with lower values of Y.
-    - A correlation close to zero suggests little or no linear association, although a different type of relationship may still exist.
-
-    Use the scatter plot, summary statistics, and correlation coefficient (if available) to describe the relationship between your chosen variables. What do you think the data tell us about the association between X and Y?
+    ## Data Summary
     """)
     return
 
@@ -211,14 +211,6 @@ def _(mo):
 @app.cell
 def _(build_summary_tab, mo, penguins, x_name, y_name):
     build_summary_tab(mo, penguins, x_name, y_name)
-    return
-
-
-@app.cell
-def _(penguins, x_name, y_name):
-    # Pearson correlation
-    correlation = penguins[[x_name, y_name]].corr().iloc[0, 1]
-    print(f"Pearson correlation: {correlation:.4f}")
     return
 
 
