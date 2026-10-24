@@ -31,7 +31,7 @@ jobs:
         run: uv sync --locked
 
       - name: Export marimo app
-        run: uv run marimo export html-wasm app.py -o dist --mode edit
+        run: uv run marimo export html-wasm app.py -o dist --mode run
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
