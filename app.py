@@ -29,15 +29,15 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Learn how linear regression can help you understand the relationship between two variables. In this notebook, you will choose a dataset, select an independent variable (X) and a dependent variable (Y), and explore the results of a regression analysis — without needing any programming skills.
+    Learn how ordinary least squares (OLS) linear regression helps you understand the relationship between two variables. In this interactive notebook, you will work with the Palmer Penguins dataset, which contains measurements of penguins observed on three islands in the Palmer Archipelago, Antarctica. The dataset includes information such as species, bill length, bill depth, flipper length, and body mass.
 
-    For example, you could use the Catholic dataset to investigate whether family income (faminc8, X) is associated with children's reading achievement (read12, Y).
+    What you will do
 
-    The notebook runs the necessary calculations automatically and presents the results for you to explore and interpret. You do not need to write, understand, or run any code yourself. The focus is on understanding the basic principles of linear regression and learning what the results tell you about the relationship between two variables.
+    You will choose a predictor variable (X) and an outcome variable (Y) to investigate whether, and how, they are linearly associated.
 
-    > Get started
+    For example, you could examine whether penguins with longer flippers tend to have greater body mass. In this case, flipper length is the predictor (X), and body mass is the outcome (Y).
 
-    Go to the next section and select a dataset, an independent variable (X), and a dependent variable (Y). Then explore the regression results to see what they reveal about your chosen variables.
+    The notebook performs the regression calculations automatically and presents the results in visualizations and statistical summaries. You can explore the scatter plot, examine the fitted regression line, and interpret the results to understand the direction and strength of the relationship.
     """)
     return
 
@@ -102,6 +102,35 @@ def import_data():
         total_variance_plot,
         variance_bar_plot,
     )
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.image(
+        src="https://allisonhorst.github.io/palmerpenguins/reference/figures/culmen_depth.png",
+        alt="Illustration of penguin culmen depth",
+        width="750px",
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    How to use this notebook
+
+    No programming experience is required. Simply use the interactive controls to: Select your predictor (X) and outcome (Y) using the dropdown menus.
+    Explore the scatter plot to look for patterns and possible linear relationships.
+    Examine the regression results, including the fitted line and relevant statistics.
+    Interpret your findings and consider what the results tell you about the relationship between your selected variables.
+
+    You can change your selections at any time to investigate different relationships and compare your findings. The notebook updates the analysis automatically, allowing you to focus on understanding the results rather than writing or running code.
+
+    Get started
+
+    Head to the next section, choose your predictor (X) and outcome (Y), and explore the data. What relationship do you expect to find? Does the regression analysis support your expectations?
+    """)
+    return
 
 
 @app.cell(hide_code=True)
