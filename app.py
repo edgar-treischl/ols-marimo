@@ -91,7 +91,7 @@ def _(mo):
     mo.image(
         src="https://allisonhorst.github.io/palmerpenguins/reference/figures/culmen_depth.png",
         alt="Illustration of penguin culmen depth",
-        width="750px",
+        width="550px",
     )
     return
 

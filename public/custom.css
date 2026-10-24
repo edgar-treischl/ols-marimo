@@ -284,3 +284,119 @@ hr {
         transition: none;
     }
 }
+/* Dropdown menu */
+.mo-label:has(> select[data-testid="marimo-plugin-dropdown"]) {
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    max-inline-size: 100%;
+}
+
+select[data-testid="marimo-plugin-dropdown"] {
+    box-sizing: border-box;
+    inline-size: clamp(12rem, 35vw, 20rem);
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    block-size: auto;
+    min-block-size: 46px;
+    margin-block-end: 0;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--app-border);
+    border-radius: 12px;
+    background-color: #fff;
+    color: var(--app-text);
+    font-family: system-ui, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.4;
+    box-shadow: 0 2px 6px rgb(15 23 42 / 5%);
+    cursor: pointer;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+select[data-testid="marimo-plugin-dropdown"]:not(:disabled):hover {
+    border-color: var(--app-highlight);
+    box-shadow: 0 3px 10px rgb(15 23 42 / 9%);
+}
+
+select[data-testid="marimo-plugin-dropdown"]:focus-visible {
+    border-color: var(--app-highlight);
+    outline: 3px solid color-mix(in srgb, var(--app-highlight) 30%, transparent);
+    outline-offset: 3px;
+    box-shadow: none;
+}
+
+select[data-testid="marimo-plugin-dropdown"]:disabled {
+    background-color: #f4f6f9;
+    color: var(--app-muted);
+    cursor: not-allowed;
+}
+
+/* Native popups remain OS-controlled unless customizable selects are supported. */
+@supports (appearance: base-select) {
+    select[data-testid="marimo-plugin-dropdown"],
+    select[data-testid="marimo-plugin-dropdown"]::picker(select) {
+        appearance: base-select;
+    }
+
+    select[data-testid="marimo-plugin-dropdown"] {
+        gap: 1rem;
+    }
+
+    select[data-testid="marimo-plugin-dropdown"]::picker-icon {
+        color: var(--app-highlight);
+        transition: rotate 160ms ease;
+    }
+
+    select[data-testid="marimo-plugin-dropdown"]:open {
+        border-color: var(--app-highlight);
+    }
+
+    select[data-testid="marimo-plugin-dropdown"]:open::picker-icon {
+        rotate: 180deg;
+    }
+
+    select[data-testid="marimo-plugin-dropdown"]::picker(select) {
+        margin-block: 0.5rem;
+        padding: 0.4rem;
+        border: 1px solid var(--app-border);
+        border-radius: 14px;
+        background: #fff;
+        color: var(--app-text);
+        font-family: system-ui, sans-serif;
+        font-size: 0.95rem;
+        box-shadow: 0 12px 32px rgb(15 23 42 / 14%);
+    }
+
+    select[data-testid="marimo-plugin-dropdown"] option {
+        gap: 0.65rem;
+        padding: 0.7rem 0.85rem;
+        border-radius: 8px;
+        line-height: 1.4;
+        cursor: pointer;
+    }
+
+    select[data-testid="marimo-plugin-dropdown"] option:checked {
+        background: color-mix(in srgb, var(--app-highlight) 10%, white);
+        color: #00638a;
+        font-weight: 600;
+    }
+
+    select[data-testid="marimo-plugin-dropdown"] option:hover,
+    select[data-testid="marimo-plugin-dropdown"] option:focus-visible {
+        background: color-mix(in srgb, var(--app-highlight) 16%, white);
+        color: #00638a;
+        outline: 2px solid var(--app-highlight);
+        outline-offset: -2px;
+    }
+
+    select[data-testid="marimo-plugin-dropdown"] option::checkmark {
+        color: var(--app-highlight);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    select[data-testid="marimo-plugin-dropdown"],
+    select[data-testid="marimo-plugin-dropdown"]::picker-icon {
+        transition: none;
+    }
+}
