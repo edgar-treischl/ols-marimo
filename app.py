@@ -85,9 +85,6 @@ def import_data():
     penguins_raw = load_penguins_data()
     penguins = penguins_raw.dropna().copy()
     return (
-        build_inspect_tab,
-        build_linear_tab,
-        build_summary_tab,
         error_plot,
         explained_variance_plot,
         fit_regression_model,
@@ -190,56 +187,105 @@ def _(outcome, predictor):
     return x_name, y_name
 
 
-@app.cell
-def _(
-    build_inspect_tab,
-    build_linear_tab,
-    mo,
-    penguins,
-    scatter_plot,
-    x_name,
-    y_name,
-):
-    # Define tabs
-    inspect_content = build_inspect_tab(
-            mo=mo,
-            data=penguins,
-            scatter_plot=scatter_plot,
-            x_name=x_name,
-            y_name=y_name,
-        )
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 01 Inspect the data
 
-    linear_content = build_linear_tab(
-        mo=mo, 
-        data=penguins, 
-        scatter_plot=scatter_plot,
-        x_name=x_name,
-        y_name=y_name,)
-    return inspect_content, linear_content
+    In a linear regression, we examine the relationship between an independent variable (X) and a dependent variable (Y).
+
+    The goal is to find a straight line that best describes their relationship.
+    """)
+    return
 
 
 @app.cell
-def _(inspect_content, linear_content, mo):
-    # Create tabs
-    tabs = mo.ui.tabs({
-        "Inspect the data": inspect_content,
-        "Linear Effects": linear_content
-    })
-    tabs
+def _(penguins):
+    penguins.head(10)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Data Summary
+    Before estimating the regression, use a scatter plot to explore the relationship between your variables.
     """)
     return
 
 
 @app.cell
-def _(build_summary_tab, mo, penguins, x_name, y_name):
-    build_summary_tab(mo, penguins, x_name, y_name)
+def _(penguins, scatter_plot, x_name, y_name):
+    scatter_plot(penguins, x=x_name, y=y_name)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Finally, some BS.
+    """)
+    return
+
+
+@app.cell
+def _(penguins, x_name, y_name):
+    penguins[[x_name, y_name]].describe().T
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 02 Linear Association
+
+            In a linear regression, we examine the relationship between an
+            independent variable (X) and a dependent variable (Y). Although
+            regression models can include several independent variables to
+            explain or predict Y, we will start with the simplest case:
+            a model with just one X and one Y.
+
+            The goal of a linear regression is to find a straight line that
+            best describes the relationship between X and Y in our data.
+
+            Before estimating the regression, we can use a scatter plot to
+            explore the relationship between our chosen variables.
+            Each point represents an observation in the dataset.
+
+            Let's take a look at the scatter plot for your selected variables.
+    """)
+    return
+
+
+@app.cell
+def _(penguins, scatter_plot, x_name, y_name):
+    scatter_plot(penguins, x=x_name, y=y_name)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    What do you observe in the scatter plot? Does there appear to be
+            a linear association between X and Y?
+
+            - A positive correlation means higher values of X tend to be
+              associated with higher values of Y.
+            - A negative correlation means higher values of X tend to be
+              associated with lower values of Y.
+            - A correlation close to zero suggests little or no linear
+              association, although a nonlinear relationship may still exist.
+
+            Use the scatter plot, summary statistics, and correlation coefficient (if available)
+            to describe the relationship between your chosen variables. What do you think the data
+            tell us about the association between X and Y?
+    """)
+    return
+
+
+@app.cell
+def _(mo, penguins, x_name, y_name):
+    correlation = penguins[[x_name, y_name]].corr().iloc[0, 1]
+    mo.md( f"**Pearson correlation:** `{correlation:.4f}`")
     return
 
 
@@ -297,7 +343,7 @@ def _(mo):
 
     Higher values indicate that the model explains a larger share of the variation in Y. However, a high \(R^2\) does not automatically mean that the model is appropriate or that X causes changes in Y.
 
-    ### Your turn
+    **Your turn**
 
     Look at your regression output and consider the following questions:
 
@@ -314,7 +360,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Modelfit
+    ## 04 Modelfit
 
     Regardless of the statistical significance or size of the estimated effect, one important question remains: How well does X explain the variation in Y?
 
@@ -349,7 +395,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Variance
+    ## 05 Variance
 
     You might think, “There will always be some prediction errors — no big deal!” But how do we know whether these errors are small or large? And how well does our model explain the outcome?
 
@@ -411,7 +457,7 @@ def _(explained_variance_plot, penguins, x_name, y_name):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Understanding R-squared
+    ## 05 Understanding R-squared
 
     We now know the total variation in Y and how much of that variation is explained by our regression model. We can use these quantities to calculate R-squared (R
     2
@@ -440,7 +486,7 @@ def _(penguins, variance_bar_plot, x_name, y_name):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## 04 Diagnostics
+    ## 06 Diagnostics
 
     1. Residuals vs. Fitted: Are we missing a pattern?
 

@@ -51,7 +51,7 @@ def build_inspect_tab(mo, data, scatter_plot, x_name, y_name):
 
     return mo.vstack([
         mo.md("""
-        ## 01. Inspect the data
+        ## 01 Inspect the data
 
         In a linear regression, we examine the relationship
         between an independent variable (X) and a dependent
