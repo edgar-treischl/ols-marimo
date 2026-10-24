@@ -4,8 +4,6 @@
 #     "altair==6.3.0",
 #     "marimo>=0.25.2",
 #     "numpy==2.5.4",
-#     "pandas==3.1.0",
-#     "plotly==7.1.0",
 #     "scipy==1.18.1",
 #     "seaborn==0.13.2",
 #     "statsmodels==0.15.0",
@@ -46,27 +44,11 @@ def _(mo):
 def import_data():
     import marimo as mo
     import numpy as np
-    import pandas as pd
-    import plotly.express as px
-    import plotly.graph_objects as go
     import statsmodels.api as sm
-    from plotly.subplots import make_subplots
     from scipy import stats
     from src.helpers import (
-        extract_numeric_columns,
         fit_regression_model,
         load_penguins_data,
-        prepare_analysis_data,
-        validate_regression_inputs,
-    )
-
-    from src.tabs import (
-        build_summary_tab,
-        build_inspect_tab,
-    )
-
-    from src.tab_02 import (
-        build_linear_tab,
     )
 
     from src.plots import (
@@ -592,75 +574,83 @@ def _(mo):
 
 
 @app.cell
-def _(model, np, sm, stats):
+def _(mo, model, np, sm, stats):
     # Normality and heteroscedasticity tests
     alpha = 0.05
-    fitted_values = np.asarray(model.fittedvalues)
     residuals = np.asarray(model.resid)
+    exog = np.asarray(model.model.exog)
 
+    output = []
+
+    # Shapiro-Wilk normality test
     if 3 <= len(residuals) <= 5000:
         shapiro_stat, shapiro_p = stats.shapiro(residuals)
 
-        print("Shapiro-Wilk normality test")
-        print(f"Statistic: {shapiro_stat:.4f}")
-        print(f"P-value: {shapiro_p:.4g}")
+        output.append(
+            mo.md(
+                f"""
+                ### Shapiro-Wilk normality test
 
-        if shapiro_p < alpha:
-            print(
-                "Interpretation: Reject the null hypothesis. "
-                "There is evidence that the residuals are not "
-                "normally distributed."
+                - **Statistic:** {shapiro_stat:.4f}
+                - **P-value:** {shapiro_p:.4g}
+
+                **Interpretation:** {
+                    'Reject the null hypothesis. There is evidence '
+                    'that the residuals are not normally distributed.'
+                    if shapiro_p < alpha
+                    else
+                    'Fail to reject the null hypothesis. There is '
+                    'insufficient evidence to conclude that the '
+                    'residuals deviate from normality.'
+                }
+                """
             )
-        else:
-            print(
-                "Interpretation: Fail to reject the null hypothesis. "
-                "There is insufficient evidence to conclude that "
-                "the residuals deviate from normality."
-            )
+        )
     else:
-        print(
-            "Shapiro-Wilk test skipped: "
-            "requires 3–5000 observations."
+        output.append(
+            mo.md(
+                "Shapiro-Wilk test skipped: "
+                "requires 3–5000 observations."
+            )
         )
 
-    exog = np.asarray(model.model.exog)
-
+    # Breusch-Pagan heteroscedasticity test
     bp_lm, bp_pvalue, bp_f, bp_f_pvalue = (
         sm.stats.diagnostic.het_breuschpagan(
             residuals, exog
         )
     )
 
-    print("\nBreusch-Pagan heteroscedasticity test")
-    print(f"LM statistic: {bp_lm:.4f}")
-    print(f"P-value: {bp_pvalue:.4g}")
+    output.append(
+        mo.md(
+            f"""
+            ### Breusch-Pagan heteroscedasticity test
 
-    if bp_pvalue < alpha:
-        print(
-            "Interpretation: Reject the null hypothesis. "
-            "There is evidence of heteroscedasticity "
-            "(non-constant error variance)."
+            - **LM statistic:** {bp_lm:.4f}
+            - **LM p-value:** {bp_pvalue:.4g}
+            - **F statistic:** {bp_f:.4f}
+            - **F p-value:** {bp_f_pvalue:.4g}
+
+            **Interpretation:** {
+                'Reject the null hypothesis. There is evidence of '
+                'heteroscedasticity (non-constant error variance).'
+                if bp_pvalue < alpha
+                else
+                'Fail to reject the null hypothesis. There is '
+                'insufficient evidence of heteroscedasticity; '
+                'the constant-variance assumption is not rejected.'
+            }
+            """
         )
-    else:
-        print(
-            "Interpretation: Fail to reject the null hypothesis. "
-            "There is insufficient evidence of heteroscedasticity; "
-            "the constant-variance assumption is not rejected."
-        )
+    )
+
+    mo.vstack(output)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Your turn: What do the tests tell you?
-
-    Look at the results of both tests for your chosen variables.
-
-    Does the normality test provide evidence that the residuals are not normally distributed?
-    Does the heteroscedasticity test provide evidence that the error variance is not constant?
-    Considering these results alongside the residual plots, what can you conclude about the assumptions of your regression model?
-
     Remember: Statistical tests provide evidence, not absolute proof. Interpret their results in combination with the plots, the sample size, and your understanding of the data.
     """)
     return
