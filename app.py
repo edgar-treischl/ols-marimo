@@ -287,28 +287,10 @@ def _(mo):
     """)
     return
 
-
 @app.cell
-def _(fit_regression_model, penguins, x_name, y_name):
-    from IPython.display import display, HTML
-
-    # Fit the regression model
+def _(mo, fit_regression_model, penguins, x_name, y_name):
     model = fit_regression_model(penguins, x_name, y_name)
 
-    # Display the model summary
-    display(HTML(model.summary().as_html()))
-    return (model,)
-
-
-@app.cell
-def _(model):
-
-    model.summary()
-    return
-
-
-@app.cell
-def _(mo, model):
     mo.md(f"""
     ```text\n{model.summary()}\n```
     """)
