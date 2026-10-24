@@ -2,6 +2,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "altair==6.3.0",
+#     "ipython==9.17.1",
 #     "marimo>=0.25.2",
 #     "numpy==2.5.4",
 #     "scipy==1.18.1",
@@ -13,10 +14,7 @@
 import marimo
 
 __generated_with = "0.25.2"
-app = marimo.App(
-    width="medium", 
-    app_title="Palmer Regression Analysis"
-)
+app = marimo.App(width="medium", app_title="Palmer Regression Analysis")
 
 
 @app.cell(hide_code=True)
@@ -290,12 +288,29 @@ def _(mo):
 
 @app.cell
 def _(fit_regression_model, penguins, x_name, y_name):
+    from IPython.display import display, HTML
+
     # Fit the regression model
     model = fit_regression_model(penguins, x_name, y_name)
 
-    # Print model summary
-    print(model.summary())
+    # Display the model summary
+    display(HTML(model.summary().as_html()))
     return (model,)
+
+
+@app.cell
+def _(model):
+
+    model.summary()
+    return
+
+
+@app.cell
+def _(mo, model):
+    mo.md(f"""
+    ```text\n{model.summary()}\n```
+    """)
+    return
 
 
 @app.cell(hide_code=True)
