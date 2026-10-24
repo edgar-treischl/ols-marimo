@@ -13,10 +13,12 @@
 
 import marimo
 
-
-
 __generated_with = "0.25.2"
-app = marimo.App(width="medium", app_title="Palmer Regression Analysis", css_file="public/custom.css")
+app = marimo.App(
+    width="medium",
+    app_title="Palmer Regression Analysis",
+    css_file="public/custom.css",
+)
 
 
 @app.cell(hide_code=True)
@@ -185,8 +187,13 @@ def _(mo):
 
 
 @app.cell
-def _(penguins):
-    penguins.head(10)
+def _(mo, penguins):
+    table = mo.ui.table(
+        penguins,
+        show_column_summaries="chart",
+    )
+
+    table
     return
 
 
@@ -287,14 +294,15 @@ def _(mo):
     """)
     return
 
+
 @app.cell
-def _(mo, fit_regression_model, penguins, x_name, y_name):
+def _(fit_regression_model, mo, penguins, x_name, y_name):
     model = fit_regression_model(penguins, x_name, y_name)
 
     mo.md(f"""
     ```text\n{model.summary()}\n```
     """)
-    return
+    return (model,)
 
 
 @app.cell(hide_code=True)
